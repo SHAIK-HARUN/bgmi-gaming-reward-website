@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #0a0b0d;
+    color: #ffffff;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0b0d;
+}
+::-webkit-scrollbar-thumb {
+  background: #e6ac00;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ffcc00;
+}
+
+/* Metallic & Gold Gradient utilities */
+.gold-gradient-bg {
+  background: linear-gradient(180deg, #f5b800 0%, #b88600 100%);
+}
+
+.gold-text-gradient {
+  background: linear-gradient(180deg, #ffffff 0%, #f5b800 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.card-red-gradient {
+  background: linear-gradient(180deg, #660000 0%, #2b0000 100%);
+}
+
+.btn-gold {
+  background: linear-gradient(180deg, #ffcc00 0%, #d49400 100%);
+  color: #000000;
+  font-family: 'Teko', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #ffe680;
+}
+
+.btn-gold:hover {
+  background: linear-gradient(180deg, #ffe066 0%, #e6a100 100%);
+  box-shadow: 0 0 15px rgba(255, 204, 0, 0.6);
+  transform: translateY(-1px);
+}
+
+.btn-gold:active {
+  transform: translateY(1px);
+}
+
+/* Glowing Animations */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(230, 172, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(230, 172, 0, 0.8);
+  }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2s infinite;
+}
+
+/* Overlay Background pattern */
+.bg-grid-pattern {
+  background-image: radial-gradient(rgba(230, 172, 0, 0.15) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
