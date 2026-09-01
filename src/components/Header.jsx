@@ -55,15 +55,15 @@ export default function Header({ onAdminClick, onLoginClick, loggedInPlayer, onL
         <div className="flex items-center space-x-1.5 sm:space-x-3">
           
           {loggedInPlayer ? (
-            /* Logged in Player Badge displaying Player ID & Account Level in Header */
+            /* Logged in Player Badge displaying Real OAuth User Details */
             <div className="flex items-center space-x-1.5 sm:space-x-2 bg-bgmi-dark border border-bgmi-gold/60 px-2 sm:px-2.5 py-1 rounded">
               <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-400 shrink-0" />
               <div className="text-left font-mono leading-none">
-                <div className="text-[10px] sm:text-xs font-bold text-bgmi-gold">
-                  ID: {loggedInPlayer.playerId}
+                <div className="text-[10px] sm:text-xs font-bold text-bgmi-gold truncate max-w-[120px] sm:max-w-[160px]">
+                  {loggedInPlayer.displayName || `ID: ${loggedInPlayer.playerId}`}
                 </div>
-                <div className="text-[9px] sm:text-[10px] text-gray-300 font-sans">
-                  Lvl {loggedInPlayer.accountLevel}
+                <div className="text-[9px] sm:text-[10px] text-gray-300 font-sans truncate max-w-[120px] sm:max-w-[160px]">
+                  {loggedInPlayer.email ? loggedInPlayer.email : `Lvl ${loggedInPlayer.accountLevel}`}
                 </div>
               </div>
               <button
@@ -111,7 +111,7 @@ export default function Header({ onAdminClick, onLoginClick, loggedInPlayer, onL
         <div className="bg-bgmi-dark border-t border-bgmi-lightGray py-4 px-6 flex flex-col space-y-3 md:hidden">
           {loggedInPlayer ? (
             <div className="w-full text-center py-2 bg-bgmi-black border border-bgmi-gold text-white font-mono text-xs sm:text-sm rounded">
-              Logged in: <span className="text-bgmi-gold font-bold">ID {loggedInPlayer.playerId}</span> (Lvl {loggedInPlayer.accountLevel})
+              Logged in: <span className="text-bgmi-gold font-bold">{loggedInPlayer.displayName || loggedInPlayer.playerId}</span>
             </div>
           ) : (
             <button
@@ -134,19 +134,6 @@ export default function Header({ onAdminClick, onLoginClick, loggedInPlayer, onL
           >
             ADMIN PANEL ACCESS
           </button>
-
-          {/* Social Links inside Mobile Drawer */}
-          <div className="flex items-center justify-center space-x-6 pt-2 border-t border-gray-800">
-            <a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-bgmi-gold">
-              <Facebook className="w-5 h-5" />
-            </a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-bgmi-gold">
-              <Instagram className="w-5 h-5" />
-            </a>
-            <a href="https://youtube.com" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-bgmi-gold">
-              <Youtube className="w-5 h-5" />
-            </a>
-          </div>
         </div>
       )}
     </header>

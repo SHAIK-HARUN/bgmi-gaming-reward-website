@@ -1,4 +1,5 @@
-const express = require('express');
+import express from 'express';
+
 const router = express.Router();
 
 // In-memory submissions store for API fallback
@@ -30,7 +31,7 @@ router.post('/submissions', (req, res) => {
   res.json({ success: true, data: newSubmission });
 });
 
-// POST /api/admin/login - Authenticate admin passcode (Updated to 'apex2026')
+// POST /api/admin/login - Authenticate admin passcode ('apex2026')
 router.post('/admin/login', (req, res) => {
   const { passcode } = req.body;
   if (passcode === 'apex2026') {
@@ -40,4 +41,4 @@ router.post('/admin/login', (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

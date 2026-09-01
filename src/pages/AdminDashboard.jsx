@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, ArrowLeft, Search, CheckCircle, XCircle, Clock, Trash2, RefreshCw, KeyRound, Download } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Search, CheckCircle, XCircle, Clock, Trash2, RefreshCw, KeyRound, Download, Image as ImageIcon, Save, RotateCcw } from 'lucide-react';
 import { updateSubmissionStatusInFirestore, deleteSubmissionFromFirestore } from '../services/firebase';
+import defaultHeroImg from '../assets/hero_banner.png';
 
 export default function AdminDashboard({ onBackToHome }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -11,17 +12,21 @@ export default function AdminDashboard({ onBackToHome }) {
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Load submissions from localStorage & sync
+  // Hero Section Manager State
+  const [heroBannerInput, setHeroBannerInput] = useState('');
+  const [heroSuccessMsg, setHeroSuccessMsg] = useState('');
+
+  // Load submissions & hero banner setting on mount
   useEffect(() => {
     if (isAuthenticated) {
       loadSubmissions();
+      loadHeroBannerSetting();
     }
   }, [isAuthenticated]);
 
   const loadSubmissions = () => {
     const localSubs = JSON.parse(localStorage.getItem('bgmi_admin_submissions') || '[]');
     
-    // Add default mock data if empty for immediate admin visualization
     if (localSubs.length === 0) {
       const mockData = [
         {
@@ -62,7 +67,32 @@ export default function AdminDashboard({ onBackToHome }) {
     }
   };
 
-  // Handle Passcode Auth (Updated to 'apex2026')
+  const loadHeroBannerSetting = () => {
+    const saved = localStorage.getItem('bgmi_custom_hero_banner');
+    setHeroBannerInput(saved || defaultHeroImg);
+  };
+
+  // Save Hero Banner Image
+  const handleSaveHeroBanner = (e) => {
+    e.preventDefault();
+    if (!heroBannerInput.trim()) return;
+
+    localStorage.setItem('bgmi_custom_hero_banner', heroBannerInput.trim());
+    window.dispatchEvent(new Event('hero_banner_updated'));
+    setHeroSuccessMsg('Hero Section Banner updated successfully!');
+    setTimeout(() => setHeroSuccessMsg(''), 3000);
+  };
+
+  // Reset Hero Banner Image
+  const handleResetHeroBanner = () => {
+    localStorage.removeItem('bgmi_custom_hero_banner');
+    setHeroBannerInput(defaultHeroImg);
+    window.dispatchEvent(new Event('hero_banner_updated'));
+    setHeroSuccessMsg('Hero Banner reset to default official Team Apex banner!');
+    setTimeout(() => setHeroSuccessMsg(''), 3000);
+  };
+
+  // Handle Passcode Auth ('apex2026')
   const handleLogin = (e) => {
     e.preventDefault();
     if (passcode.trim() === 'apex2026') {
@@ -87,10 +117,8 @@ export default function AdminDashboard({ onBackToHome }) {
 
     const targetSub = updated.find(s => s.id === id);
     if (targetSub) {
-      // Sync status change live with Firebase Firestore
       updateSubmissionStatusInFirestore(targetSub.playerId, targetSub.phoneNumber, nextStatus);
 
-      // Also update active session if it matches target player
       const activeSession = JSON.parse(localStorage.getItem('bgmi_active_submission') || '{}');
       if (activeSession.playerId === targetSub.playerId || activeSession.phoneNumber === targetSub.phoneNumber) {
         localStorage.setItem('bgmi_active_submission', JSON.stringify({ ...activeSession, status: nextStatus }));
@@ -102,10 +130,8 @@ export default function AdminDashboard({ onBackToHome }) {
   const handleDelete = async (id) => {
     const targetSub = submissions.find(s => s.id === id);
     if (targetSub) {
-      // 1. Delete from Firestore
       deleteSubmissionFromFirestore(targetSub.playerId, targetSub.phoneNumber);
 
-      // 2. Clear active session if it belongs to deleted player
       const activeSession = JSON.parse(localStorage.getItem('bgmi_active_submission') || '{}');
       if (activeSession.playerId === targetSub.playerId || activeSession.phoneNumber === targetSub.phoneNumber) {
         localStorage.removeItem('bgmi_active_submission');
@@ -173,7 +199,7 @@ export default function AdminDashboard({ onBackToHome }) {
               ADMIN PANEL
             </h2>
             <p className="text-xs text-gray-400">
-              Enter admin passcode to manage player verifications.
+              Enter admin passcode to manage player verifications & hero section.
             </p>
           </div>
 
@@ -219,7 +245,7 @@ export default function AdminDashboard({ onBackToHome }) {
 
   // Dashboard Main View
   return (
-    <div className="min-h-screen bg-bgmi-black text-white p-4 sm:p-8">
+    <div className="min-h-screen bg-bgmi-black text-white p-4 sm:p-8 space-y-6">
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Top Header */}
@@ -232,7 +258,7 @@ export default function AdminDashboard({ onBackToHome }) {
               </h1>
             </div>
             <p className="text-xs text-gray-400 mt-1 font-sans">
-              Real-time Firestore sync & status control for submitted BGMI player accounts.
+              Real-time Firestore sync, player status control & hero section banner management.
             </p>
           </div>
 
@@ -252,6 +278,75 @@ export default function AdminDashboard({ onBackToHome }) {
               <ArrowLeft className="w-4 h-4" />
               <span>EXIT DASHBOARD</span>
             </button>
+          </div>
+        </div>
+
+        {/* Hero Section Banner Manager Panel */}
+        <div className="bg-bgmi-dark border-2 border-bgmi-gold/50 rounded-lg p-4 sm:p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+            <div className="flex items-center space-x-2">
+              <ImageIcon className="w-5 h-5 text-bgmi-gold" />
+              <h2 className="font-gaming text-xl font-bold tracking-wider text-white uppercase">
+                HERO SECTION BANNER MANAGER
+              </h2>
+            </div>
+            <span className="text-xs text-bgmi-gold font-mono">LIVE PREVIEW ACTIVE</span>
+          </div>
+
+          {heroSuccessMsg && (
+            <div className="p-2.5 bg-green-950/80 border border-green-500 text-green-200 text-xs rounded flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-400" />
+              <span>{heroSuccessMsg}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            
+            {/* Live Banner Preview Box */}
+            <div className="md:col-span-1 bg-black border border-gray-700 rounded overflow-hidden p-2">
+              <span className="block text-[10px] text-gray-400 font-mono mb-1">Current Banner Image:</span>
+              <img
+                src={heroBannerInput || defaultHeroImg}
+                alt="Admin Hero Banner Preview"
+                className="w-full h-28 object-contain rounded bg-black/60"
+              />
+            </div>
+
+            {/* Banner Controls & URL Input */}
+            <form onSubmit={handleSaveHeroBanner} className="md:col-span-2 space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 mb-1">
+                  Hero Banner Image URL / Asset Path
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter Image URL (e.g. https://... or /assets/hero_banner.png)"
+                  value={heroBannerInput}
+                  onChange={(e) => setHeroBannerInput(e.target.value)}
+                  className="w-full bg-bgmi-black border border-gray-700 focus:border-bgmi-gold text-white font-mono text-xs px-3 py-2.5 rounded outline-none"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="submit"
+                  className="btn-gold px-4 py-2 text-xs font-gaming font-bold tracking-wider rounded flex items-center gap-1.5 shadow-gold-glow"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>UPDATE HERO BANNER</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleResetHeroBanner}
+                  className="px-4 py-2 bg-bgmi-black border border-gray-700 hover:border-bgmi-gold text-gray-300 hover:text-white text-xs font-gaming font-bold rounded flex items-center gap-1.5 transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-bgmi-gold" />
+                  <span>RESET TO OFFICIAL BANNER</span>
+                </button>
+              </div>
+            </form>
+
           </div>
         </div>
 

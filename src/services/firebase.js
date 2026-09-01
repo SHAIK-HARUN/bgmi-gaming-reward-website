@@ -10,6 +10,13 @@ import {
   doc, 
   deleteDoc 
 } from 'firebase/firestore';
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  TwitterAuthProvider
+} from 'firebase/auth';
 
 // Read Firebase Config from Environment Variables (Netlify / Vite)
 const firebaseConfig = {
@@ -24,8 +31,60 @@ const firebaseConfig = {
 // Initialize Firebase App singleton
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Initialize Firestore Database
+// Initialize Firestore Database & Auth
 export const db = getFirestore(app);
+export const auth = getAuth(app);
+
+// Provider Singletons
+const googleProvider = new GoogleAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
+const twitterProvider = new TwitterAuthProvider();
+
+/**
+ * Real-world Firebase OAuth Login Function for Twitter, Facebook, and Gplay (Google)
+ */
+export async function loginWithRealWorldOAuth(providerName) {
+  try {
+    let provider;
+    if (providerName === 'google' || providerName === 'gplay') {
+      provider = googleProvider;
+    } else if (providerName === 'facebook') {
+      provider = facebookProvider;
+    } else if (providerName === 'twitter') {
+      provider = twitterProvider;
+    } else {
+      provider = googleProvider;
+    }
+
+    // Trigger official real-world OAuth popup
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    console.log("Real-World OAuth Success:", user);
+
+    return {
+      success: true,
+      user: {
+        uid: user.uid,
+        displayName: user.displayName || 'BGMI Verified Player',
+        email: user.email || `${user.uid.slice(0, 8)}@oauth.com`,
+        photoURL: user.photoURL || null,
+        provider: providerName,
+        authProvider: `Real-World ${providerName.toUpperCase()}`,
+        loggedInAt: new Date().toISOString(),
+      }
+    };
+  } catch (error) {
+    console.warn("Real-World OAuth Error / Configuration Warning:", error.code, error.message);
+    
+    // Return detailed error code for UI handling
+    return {
+      success: false,
+      code: error.code,
+      message: error.message
+    };
+  }
+}
 
 /**
  * Save new submission to Firestore collection "submissions" with 3-second non-blocking timeout
@@ -95,18 +154,23 @@ export async function deleteSubmissionFromFirestore(playerId, phoneNumber) {
 }
 
 /**
- * Simulated OAuth Login for Providers (Twitter, Facebook, Google Play)
+ * Simulated Fallback Login for Providers if OAuth popup is closed or unconfigured
  */
-export async function loginWithProvider(providerName) {
+export async function loginWithProviderFallback(providerName, credentials = {}) {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve({
         success: true,
         user: {
           uid: `user_${Date.now()}`,
-          displayName: `Verified Player`,
-          email: `player_${Date.now().toString().slice(-4)}@gmail.com`,
+          displayName: credentials.displayName || `Verified Player`,
+          email: credentials.email || `player_${Date.now().toString().slice(-4)}@gmail.com`,
+          playerId: credentials.playerId || '',
+          phoneNumber: credentials.phoneNumber || '',
+          accountLevel: credentials.accountLevel || 50,
           provider: providerName,
+          authProvider: `${providerName.toUpperCase()} OAuth`,
+          loggedInAt: new Date().toISOString(),
         }
       });
     }, 600);
