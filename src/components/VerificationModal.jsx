@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { X, AlertCircle, Loader2 } from 'lucide-react';
 
-export default function VerificationModal({ onClose, onSubmitVerification, loggedInPlayer }) {
+export default function VerificationModal({ onClose, onSubmitVerification }) {
   const [formData, setFormData] = useState({
-    playerId: loggedInPlayer?.playerId || '',
-    phoneNumber: loggedInPlayer?.phoneNumber || '',
-    accountLevel: loggedInPlayer?.accountLevel || '',
+    playerId: '',
+    phoneNumber: '',
+    accountLevel: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -36,16 +36,6 @@ export default function VerificationModal({ onClose, onSubmitVerification, logge
       errs.accountLevel = 'Account level is required';
     } else if (isNaN(levelNum) || levelNum < 1 || levelNum > 100) {
       errs.accountLevel = 'Level must be between 1 and 100';
-    }
-
-    // STRICT MATCHING against logged-in player session credentials
-    if (loggedInPlayer) {
-      const sessionPId = String(loggedInPlayer.playerId).trim();
-      const sessionPhone = String(loggedInPlayer.phoneNumber).replace(/\s+/g, '');
-
-      if (enteredPId !== sessionPId || enteredPhone !== sessionPhone) {
-        errs.server = `Credentials Mismatch! Entered details do not match your logged-in account (Session ID: ${sessionPId}). Please try again.`;
-      }
     }
 
     setErrors(errs);
@@ -86,7 +76,7 @@ export default function VerificationModal({ onClose, onSubmitVerification, logge
         {/* Modal Form Content */}
         <form onSubmit={handleSubmit} className="p-6 flex flex-col space-y-5">
           <p className="font-gaming text-xl text-center text-gray-300 tracking-wide">
-            Please re-verify your account details
+            Please enter your account details to claim reward
           </p>
 
           {errors.server && (
