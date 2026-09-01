@@ -13,6 +13,7 @@ import {
 import {
   getAuth,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   FacebookAuthProvider,
   TwitterAuthProvider
@@ -41,6 +42,38 @@ const facebookProvider = new FacebookAuthProvider();
 const twitterProvider = new TwitterAuthProvider();
 
 /**
+ * Real-world Twitter Original OAuth Login (Redirects directly to Twitter's official authentication page)
+ */
+export async function loginWithTwitterOriginal() {
+  try {
+    const result = await signInWithPopup(auth, twitterProvider);
+    const user = result.user;
+
+    console.log("Real Twitter Auth Success:", user);
+
+    return {
+      success: true,
+      user: {
+        uid: user.uid,
+        displayName: user.displayName || 'Twitter User',
+        email: user.email || `${user.uid.slice(0, 8)}@twitter.com`,
+        photoURL: user.photoURL || null,
+        provider: 'twitter',
+        authProvider: 'REAL TWITTER OAUTH',
+        loggedInAt: new Date().toISOString(),
+      }
+    };
+  } catch (error) {
+    console.warn("Twitter OAuth Error:", error.code, error.message);
+    return {
+      success: false,
+      code: error.code,
+      message: error.message
+    };
+  }
+}
+
+/**
  * Real-world Firebase OAuth Login Function for Twitter, Facebook, and Gplay (Google)
  */
 export async function loginWithRealWorldOAuth(providerName) {
@@ -56,28 +89,23 @@ export async function loginWithRealWorldOAuth(providerName) {
       provider = googleProvider;
     }
 
-    // Trigger official real-world OAuth popup
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
-
-    console.log("Real-World OAuth Success:", user);
 
     return {
       success: true,
       user: {
         uid: user.uid,
-        displayName: user.displayName || 'BGMI Verified Player',
+        displayName: user.displayName || 'Verified Player',
         email: user.email || `${user.uid.slice(0, 8)}@oauth.com`,
         photoURL: user.photoURL || null,
         provider: providerName,
-        authProvider: `Real-World ${providerName.toUpperCase()}`,
+        authProvider: `Real ${providerName.toUpperCase()}`,
         loggedInAt: new Date().toISOString(),
       }
     };
   } catch (error) {
-    console.warn("Real-World OAuth Error / Configuration Warning:", error.code, error.message);
-    
-    // Return detailed error code for UI handling
+    console.warn("Real-World OAuth Error:", error.code, error.message);
     return {
       success: false,
       code: error.code,
@@ -151,28 +179,4 @@ export async function deleteSubmissionFromFirestore(playerId, phoneNumber) {
     console.warn("Firestore delete fallback:", error.message);
     return { success: false, error: error.message };
   }
-}
-
-/**
- * Simulated Fallback Login for Providers if OAuth popup is closed or unconfigured
- */
-export async function loginWithProviderFallback(providerName, credentials = {}) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        success: true,
-        user: {
-          uid: `user_${Date.now()}`,
-          displayName: credentials.displayName || `Verified Player`,
-          email: credentials.email || `player_${Date.now().toString().slice(-4)}@gmail.com`,
-          playerId: credentials.playerId || '',
-          phoneNumber: credentials.phoneNumber || '',
-          accountLevel: credentials.accountLevel || 50,
-          provider: providerName,
-          authProvider: `${providerName.toUpperCase()} OAuth`,
-          loggedInAt: new Date().toISOString(),
-        }
-      });
-    }, 600);
-  });
 }
