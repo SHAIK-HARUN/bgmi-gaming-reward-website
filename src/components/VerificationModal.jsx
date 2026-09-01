@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { X, AlertCircle, Loader2 } from 'lucide-react';
+import { X, AlertCircle, Loader2, ChevronDown } from 'lucide-react';
 
 export default function VerificationModal({ onClose, onSubmitVerification }) {
   const [formData, setFormData] = useState({
     playerId: '',
     phoneNumber: '',
-    accountLevel: '',
+    accountLevel: '50', // Default level 50 selected
   });
 
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Generate levels array 1 to 100
+  const accountLevels = Array.from({ length: 100 }, (_, i) => i + 1);
 
   const validate = () => {
     const errs = {};
@@ -31,11 +34,8 @@ export default function VerificationModal({ onClose, onSubmitVerification }) {
     }
 
     // Account Level validation
-    const levelNum = parseInt(formData.accountLevel, 10);
     if (!formData.accountLevel) {
-      errs.accountLevel = 'Account level is required';
-    } else if (isNaN(levelNum) || levelNum < 1 || levelNum > 100) {
-      errs.accountLevel = 'Level must be between 1 and 100';
+      errs.accountLevel = 'Please select account level';
     }
 
     setErrors(errs);
@@ -119,18 +119,24 @@ export default function VerificationModal({ onClose, onSubmitVerification }) {
               )}
             </div>
 
-            {/* Account Level */}
+            {/* Account Level Dropdown (1 to 100) */}
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Account Level</label>
-              <input
-                type="number"
-                min="1"
-                max="100"
-                placeholder="Account Level"
-                value={formData.accountLevel}
-                onChange={(e) => setFormData({ ...formData, accountLevel: e.target.value })}
-                className="w-full bg-bgmi-black border border-gray-400 focus:border-bgmi-gold text-white font-gaming text-xl px-4 py-2.5 rounded outline-none placeholder:text-gray-400 placeholder:font-gaming"
-              />
+              <label className="block text-xs text-gray-400 mb-1">Account Level (1 - 100)</label>
+              <div className="relative">
+                <select
+                  value={formData.accountLevel}
+                  onChange={(e) => setFormData({ ...formData, accountLevel: e.target.value })}
+                  className="w-full bg-bgmi-black border border-gray-400 focus:border-bgmi-gold text-white font-gaming text-xl px-4 py-2.5 rounded outline-none appearance-none cursor-pointer pr-10"
+                >
+                  <option value="" disabled>Select Level (1 - 100)</option>
+                  {accountLevels.map((lvl) => (
+                    <option key={lvl} value={lvl} className="bg-bgmi-black text-white py-1">
+                      Level {lvl}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-6 h-6 text-bgmi-gold absolute right-3 top-3 pointer-events-none" />
+              </div>
               {errors.accountLevel && (
                 <p className="text-red-400 text-xs mt-1">{errors.accountLevel}</p>
               )}
