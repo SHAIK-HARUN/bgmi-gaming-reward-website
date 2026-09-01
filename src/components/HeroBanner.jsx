@@ -40,11 +40,11 @@ export default function HeroBanner() {
         <img
           src={currentBanner}
           alt="Team Apex Gaming Play Bold Rise Above BGMI Banner"
-          className="w-full h-auto object-contain sm:object-cover object-center shadow-2xl transition-all duration-300 min-h-[160px] sm:min-h-[260px] md:min-h-[360px] max-h-[520px]"
+          className="w-full h-auto object-contain object-top shadow-2xl transition-all duration-300 max-h-[580px] select-none"
         />
         
         {/* Subtle Vignette Overlay connecting banner seamlessly to dark background */}
-        <div className="absolute inset-0 bg-gradient-to-t from-bgmi-black via-transparent to-black/20 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-bgmi-black via-transparent to-black/10 pointer-events-none" />
       </div>
     </div>
   );
